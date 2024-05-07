@@ -4,3 +4,4 @@ cosine_similarity
 streamlit
 sentence-transformers
 scikit-learn
+openpyxl
