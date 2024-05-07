@@ -50,7 +50,7 @@ def calculate_and_save_similarity(extraction_usine_df, extraction_jira_df):
                 if similarity_matrix[i, j] >= 0.7:
                     ws.append([extraction_usine_df.iloc[i, 0], extraction_jira_df.iloc[j, 1], extraction_jira_df.iloc[j, 0], similarity_matrix[i, j]])
 
-        # Save the workbook to an Excel file
+        # Save the workbook to an Excel file with .xlsx extension
         wb.save('similarities.xlsx')
 
 # Main Streamlit app
@@ -66,14 +66,14 @@ def main():
         if st.button("Calculate Similarity and Download"):
             calculate_and_save_similarity(extraction_usine_df, extraction_jira_df)
             st.success("Similarity matrix saved as similarities.xlsx. Click the link below to download.")
-            st.markdown(get_binary_file_downloader_html('similarities.xlsx', 'Similarity Matrix Excel File'), unsafe_allow_html=True)
+            st.markdown(get_binary_file_downloader_html('similarities.xlsx', 'Similarity_Matrix'), unsafe_allow_html=True)
 
 # Helper function to generate a link for downloading files
 def get_binary_file_downloader_html(file_path, file_label="File"):
     with open(file_path, 'rb') as f:
         data = f.read()
     b64 = base64.b64encode(data).decode()
-    href = f'<a href="data:application/octet-stream;base64,{b64}" download="{file_label}">Click here to download {file_label}</a>'
+    href = f'<a href="data:application/octet-stream;base64,{b64}" download="{file_label}.xlsx">Click here to download {file_label}</a>'
     return href
 
 if __name__ == "__main__":
