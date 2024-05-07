@@ -4,6 +4,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import openpyxl
 from openpyxl.styles import Font
+import base64
 
 # Define function to upload Excel files and process data
 def process_excel_files():
@@ -20,8 +21,8 @@ def process_excel_files():
     else:
         return None, None
 
-# Define function to calculate similarities and display results
-def calculate_and_display_similarities(extraction_usine_df, extraction_jira_df):
+# Define function to calculate similarities and save results to Excel
+def calculate_and_save_similarity(extraction_usine_df, extraction_jira_df):
     if extraction_usine_df is not None and extraction_jira_df is not None:
         # Load pre-trained SentenceTransformer model
         model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -33,38 +34,24 @@ def calculate_and_display_similarities(extraction_usine_df, extraction_jira_df):
         # Calculate cosine similarity between embeddings
         similarity_matrix = cosine_similarity(embeddings_usine, embeddings_jira)
 
-        st.header("Similarities Results")
+        # Create a new workbook and select the active sheet
+        wb = openpyxl.Workbook()
+        ws = wb.active
 
-        # Write the similarity results to an Excel file
-        write_results_to_excel(extraction_usine_df, extraction_jira_df, similarity_matrix)
+        # Write the header row
+        ws.append(['Extraction USINE', 'Extraction JIRA', 'Code JIRA', 'Similarity Score'])
+        header_font = Font(bold=True)
+        for col in ws[1]:
+            col.font = header_font
 
-        # Print and display similarities greater than or equal to 0.7
+        # Write the similarity results
         for i in range(similarity_matrix.shape[0]):
             for j in range(similarity_matrix.shape[1]):
                 if similarity_matrix[i, j] >= 0.7:
-                    st.write("Similarity between sentence {} of extraction_usine_df and sentence {} of extraction_jira_df: {:.2f}".format(i+1, j+1, similarity_matrix[i, j]))
-    else:
-        st.warning("Please upload both Extraction USINE and Extraction JIRA Excel files.")
+                    ws.append([extraction_usine_df.iloc[i, 0], extraction_jira_df.iloc[j, 1], extraction_jira_df.iloc[j, 0], similarity_matrix[i, j]])
 
-# Define function to write similarity results to an Excel file
-def write_results_to_excel(extraction_usine_df, extraction_jira_df, similarity_matrix):
-    wb = openpyxl.Workbook()
-    ws = wb.active
-
-    # Write the header row
-    ws.append(['Extraction USINE', 'Extraction JIRA', 'Code JIRA', 'Similarity Score'])
-    header_font = Font(bold=True)
-    for col in ws[1]:
-        col.font = header_font
-
-    # Write the similarity results
-    for i in range(similarity_matrix.shape[0]):
-        for j in range(similarity_matrix.shape[1]):
-            if similarity_matrix[i, j] >= 0.7:
-                ws.append([extraction_usine_df.iloc[i, 0], extraction_jira_df.iloc[j, 1], extraction_jira_df.iloc[j, 0], similarity_matrix[i, j]])
-
-    # Save the workbook to an Excel file
-    wb.save('similarities.xlsx')
+        # Save the workbook to an Excel file
+        wb.save('similarities.xlsx')
 
 # Main Streamlit app
 def main():
@@ -74,8 +61,20 @@ def main():
     st.sidebar.title("Options")
     extraction_usine_df, extraction_jira_df = process_excel_files()
 
-    # Calculate and display similarities
-    calculate_and_display_similarities(extraction_usine_df, extraction_jira_df)
+    if extraction_usine_df is not None and extraction_jira_df is not None:
+        # Calculate similarity matrix and save to Excel
+        if st.button("Calculate Similarity and Download"):
+            calculate_and_save_similarity(extraction_usine_df, extraction_jira_df)
+            st.success("Similarity matrix saved as similarities.xlsx. Click the link below to download.")
+            st.markdown(get_binary_file_downloader_html('similarities.xlsx', 'Similarity Matrix Excel File'), unsafe_allow_html=True)
+
+# Helper function to generate a link for downloading files
+def get_binary_file_downloader_html(file_path, file_label="File"):
+    with open(file_path, 'rb') as f:
+        data = f.read()
+    b64 = base64.b64encode(data).decode()
+    href = f'<a href="data:application/octet-stream;base64,{b64}" download="{file_label}">Click here to download {file_label}</a>'
+    return href
 
 if __name__ == "__main__":
     main()
