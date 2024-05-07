@@ -48,7 +48,7 @@ def calculate_and_save_similarity(extraction_usine_df, extraction_jira_df):
         for i in range(similarity_matrix.shape[0]):
             for j in range(similarity_matrix.shape[1]):
                 if similarity_matrix[i, j] >= 0.7:
-                    ws.append([extraction_usine_df.iloc[i, 0], extraction_jira_df.iloc[j, 1], extraction_jira_df.iloc[j, 0], similarity_matrix[i, j]])
+                    ws.append([extraction_usine_df.iloc[i, 14], extraction_jira_df.iloc[j,2], extraction_jira_df.iloc[j, 0], similarity_matrix[i, j]])
 
         # Save the workbook to an Excel file with .xlsx extension
         wb.save('similarities.xlsx')
