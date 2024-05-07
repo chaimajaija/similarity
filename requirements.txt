@@ -2,3 +2,4 @@ numpy
 cosine_similarity
 streamlit
 SentenceTransformer
+scikit-learn
