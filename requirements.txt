@@ -5,4 +5,5 @@ streamlit
 sentence-transformers
 scikit-learn
 openpyxl
+base64
 
